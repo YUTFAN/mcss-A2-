@@ -70,6 +70,11 @@ class Patch:
     # def stress(self, stress_level):
     #     self.anabolic_hormone -= 0.5 * stress_level * math.log10(self.anabolic_hormone)
     #     self.catabolic_hormone += 0.5 * stress_level * math.log10(self.catabolic_hormone)
+
+    #肌肉纤维的生长，受到合成激素和分解激素的影响
+    def grow(self):
+        self.fiber_size -= 0.20 * math.log10(self.catabolic_hormone)
+        self.fiber_size += 0.20 * min(math.log10(self.anabolic_hormone), 1.05 * math.log10(self.catabolic_hormone))
     
     #生成新的肌肉纤维
     def new_muscle_fiber(self):
@@ -78,5 +83,18 @@ class Patch:
         self.fiber.max_size = max_size
         self.fiber.fiber_size = fiber_size
         self.fiber.regulate_muscle_fiber()
+    
+    class Muscle:
+        def __init__(self, width, height):
+            self.width = width
+            self.height = height
+            self.patches = []
+            for _ in range(height):
+                row = []
+                for _ in range(width):
+                    row.append(Patch())
+                self.patches.append(row)
+            self.days = 0
+    
 
 
