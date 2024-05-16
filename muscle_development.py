@@ -84,17 +84,27 @@ class Patch:
         self.fiber.fiber_size = fiber_size
         self.fiber.regulate_muscle_fiber()
     
-    class Muscle:
-        def __init__(self, width, height):
-            self.width = width
-            self.height = height
-            self.patches = []
-            for _ in range(height):
-                row = []
-                for _ in range(width):
-                    row.append(Patch())
-                self.patches.append(row)
-            self.days = 0
+class Muscle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.patches = []
+        for _ in range(height):
+            row = []
+            for _ in range(width):
+                row.append(Patch())
+            self.patches.append(row)
+        self.days = 0
+
+    def set_up(self):
+        for i in range(self.width):
+            for j in range(self.height):
+                self.patches[i][j].new_muscle_fiber()
+    
+    def csv(self, filename):
+        muscle = [self.days, self.muscle_mass(), self.anabolic_hormone_mean(), self.catabolic_hormone_mean()]
+        with open(filename, 'a') as csvfile:
+            csvfile.write(','.join(map(str, muscle)) + '\n')
     
 
 
