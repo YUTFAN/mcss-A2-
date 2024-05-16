@@ -23,5 +23,8 @@ INTERVAL = 5
 SLOW_FIBER = 50
 #是否力量训练
 LIFT = True
+#总天数
+DAYS = 100
+
 
 
