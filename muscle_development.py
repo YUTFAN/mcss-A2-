@@ -1,33 +1,21 @@
-import csv
 import random
 import math
 
-#固定的参数
-
-#合成激素的最大值和最小值
-ANABOLIC_HORMONE_MAX = 200
-ANABOLIC_HORMONE_MIN = 50
-
-#分解激素的最大值和最小值
-CATABOLIC_HORMONE_MAX = 250
-CATABOLIC_HORMONE_MIN = 52
-
-#激素扩散率
-HORMONE_DIFFUSE_RATE = 0.75
-
-#可以改变的参数(按照netlogo中的顺序和默认值)
+#可以改变的参数(按照netlogo中的顺序)
 #运动强度
-INTENSITY = 95
+INTENSITY = 90
 #睡眠时间
 SLEEP = 8
 #运动间隔天数
-INTERVAL = 5
+INTERVAL = 2
 #慢肌纤维比例
 SLOW_FIBER = 50
 #是否力量训练
 LIFT = True
 #总天数
-DAYS = 100
+DAYS = 2000
+#压力
+STRESS = 5
 
 #肌肉纤维初始化，控制肌肉的大小和生成
 class MuscleFiber:
@@ -55,4 +43,40 @@ class MuscleFiber:
         self.regulate_muscle_fiber()
 
     
+#补丁类，主要用于控制合成激素和分解激素的变化以及肌肉纤维的生成
+class Patch:
+    def __init__(self):
+        self.anabolic_hormone = 50
+        self.catabolic_hormone = 52
+        self.fiber = MuscleFiber()
+
+    #执行每日活动
+    def perform_daily_activity(self):
+        self.anabolic_hormone += 2.0 *math.log10(self.fiber.fiber_size)
+        self.catabolic_hormone += 2.5 * math.log10(self.fiber.fiber_size)
+
+    #举重
+    def lift_weights(self, intensity):
+        if random.random() < (intensity / 100) **2:
+            self.anabolic_hormone += 44 * math.log10(self.fiber.fiber_size)
+            self.catabolic_hormone += 55 * math.log10(self.fiber.fiber_size)
+
+    #睡眠
+    def sleep(self, hours):
+        self.anabolic_hormone -= 0.48 * hours * math.log10(self.anabolic_hormone)
+        self.catabolic_hormone -= 0.5 * hours * math.log10(self.catabolic_hormone)
+
+    # #压力
+    # def stress(self, stress_level):
+    #     self.anabolic_hormone -= 0.5 * stress_level * math.log10(self.anabolic_hormone)
+    #     self.catabolic_hormone += 0.5 * stress_level * math.log10(self.catabolic_hormone)
+    
+    #生成新的肌肉纤维
+    def new_muscle_fiber(self):
+        max_size = 4 + sum(1 for _ in range(20) if random.random() > SLOW_FIBER / 100)
+        fiber_size = (0.2 + random.random() * 0.4) * max_size
+        self.fiber.max_size = max_size
+        self.fiber.fiber_size = fiber_size
+        self.fiber.regulate_muscle_fiber()
+
 
