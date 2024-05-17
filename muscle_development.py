@@ -1,15 +1,13 @@
 import random
 import math
 
-
-
 #可以改变的参数(按照netlogo中的顺序和默认值)
 #运动强度
-INTENSITY = 70
+INTENSITY = 95
 #睡眠时间
 SLEEP = 8
 #运动间隔天数
-INTERVAL = 2
+INTERVAL = 5
 #慢肌纤维比例
 SLOW_FIBER = 50
 #是否力量训练
@@ -198,22 +196,22 @@ class Muscle:
     
     #获取邻居
     def get_neighbors(self, x, y):
-        offsets = [-1, 0, 1]
-        return [
-            (x + dx, y + dy)
-            for dx in offsets
-            for dy in offsets
-            if not (dx == 0 and dy == 0)
-            if 0 <= x + dx < self.width
-            if 0 <= y + dy < self.height
-        ]
+        neighbors = []
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < self.width and 0 <= ny < self.height:
+                    neighbors.append((nx, ny))
+        return neighbors
+
 
     
 if __name__ == '__main__':
     world = Muscle(17, 17)
     world.set_up()
     for i in range(DAYS):
-        print(f"\r{world.days}/{DAYS}", end="")
         world.go()
         world.csv('muscle.csv')
 
