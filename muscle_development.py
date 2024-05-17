@@ -106,5 +106,34 @@ class Muscle:
         with open(filename, 'a') as csvfile:
             csvfile.write(','.join(map(str, muscle)) + '\n')
     
+        #调节激素    
+    def regulate_hormones(self):
+        def clamp(value, minimum, maximum):
+            return max(minimum, min(value, maximum))
+        
+        self.diffuse_hormones('anabolic_hormone', 0.75) #待完成
+        self.diffuse_hormones('catabolic_hormone', 0.75)#待完成
+
+        for row in self.patches:
+            for patch in row:
+                patch.anabolic_hormone = clamp(patch.anabolic_hormone, 50, 200)
+                patch.catabolic_hormone = clamp(patch.catabolic_hormone, 52, 250)
+    
+    #找到周围的补丁
+    def get_neighbors(self, x, y):
+        neighbors = []
+        directions = [(-1, -1), (-1, 0), (-1, 1),
+                  (0, -1),         (0, 1),
+                  (1, -1), (1, 0), (1, 1)]
+    
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+        if 0 <= nx < self.width and 0 <= ny < self.height:
+            neighbors.append((nx, ny))
+    
+        return neighbors
 
 
+
+    
+    
