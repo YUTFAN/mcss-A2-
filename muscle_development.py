@@ -66,10 +66,10 @@ class Patch:
         self.anabolic_hormone -= 0.48 * hours * math.log10(self.anabolic_hormone)
         self.catabolic_hormone -= 0.5 * hours * math.log10(self.catabolic_hormone)
 
-    # #压力
-    # def stress(self, stress_level):
-    #     self.anabolic_hormone -= 0.5 * stress_level * math.log10(self.anabolic_hormone)
-    #     self.catabolic_hormone += 0.5 * stress_level * math.log10(self.catabolic_hormone)
+    #压力
+    def stress(self, stress_level):
+        self.anabolic_hormone -= 0.0 * stress_level * math.log10(self.anabolic_hormone)
+        self.catabolic_hormone += 0.0 * stress_level * math.log10(self.catabolic_hormone)
 
     #肌肉纤维的生长，受到合成激素和分解激素的影响
     def grow(self):
@@ -132,6 +132,95 @@ class Muscle:
             neighbors.append((nx, ny))
     
         return neighbors
+    
+        #扩散激素
+    def diffuse_hormones(self, hormone, rate):
+        total_neighbors = 8
+        new_values = [[0] * self.width for _ in range(self.height)]
+
+        #计算扩散的值
+        def calculate_distributed_value(value):
+            return value * rate / total_neighbors
+        
+        
+        def accumulate_distributed_value(x, y, value):
+            neighbors = self.get_neighbors(x, y)
+            distributed_value = calculate_distributed_value(value)
+            for nx, ny in neighbors:
+                new_values[ny][nx] += distributed_value
+            return len(neighbors)
+        
+        #累积剩余的值
+        def accumulate_remaining_value(x, y, current_value, num_neighbors):
+            remaining_value = current_value * (1 - rate)
+            if num_neighbors < total_neighbors:
+                remaining_value += calculate_distributed_value(current_value) * (total_neighbors - num_neighbors)
+            new_values[y][x] += remaining_value
+        
+        #遍历所有的补丁,计算新的激素值
+        for y in range(self.height):
+            for x in range(self.width):
+                current_value = getattr(self.patches[y][x], hormone)
+                num_neighbors = accumulate_distributed_value(x, y, current_value)
+                accumulate_remaining_value(x, y, current_value, num_neighbors)
+
+        #将新的激素值赋值给补丁
+        for y in range(self.height):
+            for x in range(self.width):
+                setattr(self.patches[y][x], hormone, new_values[y][x])
+
+        #每天的活动
+    def go(self):
+        for row in self.patches:
+            for patch in row:
+                patch.perform_daily_activity()
+                if LIFT and self.days % INTERVAL == 0:
+                    patch.lift_weights(INTENSITY)
+                patch.sleep(SLEEP)
+                
+                patch.stress(STRESS)
+
+        self.regulate_hormones()
+        for row in self.patches:
+            for patch in row:
+                patch.fiber.develop_muscle(patch.anabolic_hormone, patch.catabolic_hormone)
+        self.days += 1
+    
+
+
+    
+        #计算肌肉的总质量
+    def muscle_mass(self):
+        mass = 0
+        for i in range(self.width):
+            for j in range(self.height):
+                mass += self.patches[i][j].fiber.fiber_size
+        return mass
+    
+    #计算合成激素的平均值
+    def anabolic_hormone_mean(self):
+        mean = 0
+        for i in range(self.width):
+            for j in range(self.height):
+                mean += self.patches[i][j].anabolic_hormone
+        return mean / (self.width * self.height)
+    
+    #计算分解激素的平均值
+    def catabolic_hormone_mean(self):
+        mean = 0
+        for i in range(self.width):
+            for j in range(self.height):
+                mean += self.patches[i][j].catabolic_hormone
+        return mean / (self.width * self.height)
+    
+if __name__ == '__main__':
+    world = Muscle(17, 17)
+    world.set_up()
+    for i in range(DAYS):
+        print(f"\r{world.days}/{DAYS}", end="")
+        world.go()
+        world.csv('muscle.csv')
+
 
 
 
