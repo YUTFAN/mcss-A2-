@@ -3,17 +3,17 @@ import math
 
 #可以改变的参数(按照netlogo中的顺序和默认值)
 #运动强度
-INTENSITY = 95
+INTENSITY = 88
 #睡眠时间
 SLEEP = 8
 #运动间隔天数
-INTERVAL = 5
+INTERVAL = 3
 #慢肌纤维比例
-SLOW_FIBER = 50
+SLOW_FIBER = 40
 #是否力量训练
 LIFT = True
 #总天数
-DAYS = 2000
+DAYS = 3000
 #压力
 STRESS = 5
 
@@ -118,9 +118,10 @@ class Muscle:
     
     #初始化肌肉
     def set_up(self):
-        for i in range(self.width):
-            for j in range(self.height):
-                self.patches[i][j].new_muscle_fiber()
+        for row in self.patches:
+            for patch in row:
+                patch.new_muscle_fiber()
+        
 
     #每天的活动
     def go(self):
