@@ -2,12 +2,12 @@ import random
 import math
 
 # Parameters
-INTENSITY = 88
+INTENSITY = 60
 SLEEP = 8
-INTERVAL = 3
+INTERVAL = 2
 SLOW_FIBER = 40
 LIFT = True
-DAYS = 3000
+DAYS = 5000
 STRESS = 5
 
 class MuscleFiber:
@@ -33,29 +33,36 @@ class Patch:
     def __init__(self, muscle, x, y):
         self.anabolic_hormone = 50
         self.catabolic_hormone = 52
+        self.anabolic_hormone_next = 0
+        self.catabolic_hormone_next = 0
         self.fiber = MuscleFiber()
         self.muscle = muscle
         self.x = x
         self.y = y
 
     def perform_daily_activity(self):
+        """根据日常活动调整激素水平。"""
         self.anabolic_hormone += 2.5 * math.log10(self.fiber.fiber_size)
         self.catabolic_hormone += 2.0 * math.log10(self.fiber.fiber_size)
 
     def lift_weights(self, intensity):
+        """根据举重强度增加激素水平。"""
         if random.random() < (intensity / 100) ** 2:
             self.anabolic_hormone += 55 * math.log10(self.fiber.fiber_size)
             self.catabolic_hormone += 44 * math.log10(self.fiber.fiber_size)
 
     def sleep(self, hours):
+        """睡眠期间减少激素水平。"""
         self.anabolic_hormone -= 0.48 * hours * math.log10(self.anabolic_hormone)
         self.catabolic_hormone -= 0.5 * hours * math.log10(self.catabolic_hormone)
 
     def stress(self, stress_level):
+        """根据压力调整激素水平。"""
         self.anabolic_hormone -= 0.0 * stress_level * math.log10(self.anabolic_hormone)
         self.catabolic_hormone += 0.0 * stress_level * math.log10(self.catabolic_hormone)
 
     def new_muscle_fiber(self):
+        """生成一个具有随机大小的新肌纤维。"""
         max_size = 4 + sum(1 for _ in range(20) if random.random() > SLOW_FIBER / 100)
         fiber_size = (0.2 + random.random() * 0.4) * max_size
         self.fiber.max_size = max_size
@@ -63,6 +70,7 @@ class Patch:
         self.fiber.regulate_muscle_fiber()
 
     def regulate_hormones(self):
+        """将激素值限制在指定范围内。"""
         def clamp(value, minimum, maximum):
             return max(minimum, min(value, maximum))
         
@@ -70,21 +78,31 @@ class Patch:
         self.catabolic_hormone = clamp(self.catabolic_hormone, 52, 250)
 
     def diffuse_hormones(self, hormone, rate):
+        """将激素水平分配给相邻的补丁，并存储扩散后的数据。"""
+        total_num = 8
         neighbors = self.get_neighbors()
-        total_neighbors = 8
         num_neighbors = len(neighbors)
         current_value = getattr(self, hormone)
 
-        distributed_value = current_value * rate / total_neighbors
-        remaining_value = current_value * (1 - rate) + distributed_value * (total_neighbors - num_neighbors)
+        distributed_value = current_value * rate / total_num
+        remaining_value = current_value * (1 - rate) + distributed_value * (total_num - num_neighbors)
 
+        hormone_next = hormone + "_next"
         for neighbor in neighbors:
-            neighbor_hormone_value = getattr(neighbor, hormone)
-            setattr(neighbor, hormone, neighbor_hormone_value + distributed_value)
+            neighbor_hormone_next_value = getattr(neighbor, hormone_next)
+            setattr(neighbor, hormone_next, neighbor_hormone_next_value + distributed_value)
         
-        setattr(self, hormone, remaining_value)
+        setattr(self, hormone_next, getattr(self, hormone_next) + remaining_value)
+
+    def update_hormones(self):
+        """统一更新扩散后的激素值。"""
+        self.anabolic_hormone = self.anabolic_hormone_next
+        self.catabolic_hormone = self.catabolic_hormone_next
+        self.anabolic_hormone_next = 0
+        self.catabolic_hormone_next = 0
 
     def get_neighbors(self):
+        """查找相邻的补丁。"""
         offsets = [-1, 0, 1]
         neighbors = []
         for dx in offsets:
@@ -132,7 +150,6 @@ class Muscle:
     def set_up(self):
         for row in self.patches:
             for patch in row:
-                patch.regulate_hormones()
                 patch.new_muscle_fiber()
 
     def go(self):
@@ -148,6 +165,10 @@ class Muscle:
             for patch in row:
                 patch.diffuse_hormones('anabolic_hormone', 0.75)
                 patch.diffuse_hormones('catabolic_hormone', 0.75)
+        
+        for row in self.patches:
+            for patch in row:
+                patch.update_hormones()
 
         for row in self.patches:
             for patch in row:
