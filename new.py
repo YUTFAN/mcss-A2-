@@ -4,11 +4,11 @@ import math
 # Parameters
 INTENSITY = 60
 SLEEP = 8
-INTERVAL = 2
-SLOW_FIBER = 40
+INTERVAL = 5
+SLOW_FIBER = 50
 LIFT = True
 DAYS = 5000
-STRESS = 5
+STRESS = 9
 
 class MuscleFiber:
     def __init__(self):
@@ -109,9 +109,10 @@ class Patch:
             for dy in offsets:
                 if dx == 0 and dy == 0:
                     continue
-                nx, ny = self.x + dx, self.y + dy
-                if 0 <= nx < self.muscle.width and 0 <= ny < self.muscle.height:
-                    neighbors.append(self.muscle.patches[ny][nx])
+                nx = (self.x + dx) % self.muscle.width
+                ny = (self.y + dy) % self.muscle.height
+                
+                neighbors.append(self.muscle.patches[ny][nx])
         return neighbors
 
 class Muscle:
